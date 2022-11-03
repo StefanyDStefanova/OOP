@@ -18,7 +18,6 @@ private:
 	Elem<T>* front;
 	Elem<T>* back;
 
-	//???????
 	void copyQueue(const Queue&);
 	void deleteQueue();
 
@@ -34,8 +33,6 @@ public:
 	void head(T&) const;
 
 	int length();
-
-	void print() const;
 };
 
 
@@ -138,18 +135,6 @@ void Queue<T>::head(T& x) const
 		std::cerr << "The queue is empty.\n";
 	}
 	x = front->data;
-}
-
-template <typename T>
-void Queue<T>::print() const
-{
-	T x;
-	while (!isEmpty())
-	{
-		std::cout << x << " ";
-		pop(x);
-	}
-	std::cout << std::endl;
 }
 
 template <typename T>
