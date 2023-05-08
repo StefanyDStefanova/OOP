@@ -80,11 +80,6 @@ const int Value::getValueInteger() const
 	return *fValueInteger;
 }
 
-const std::string Value::getValueNull() const
-{
-	return "null";
-}
-
 Value::Type Value::getType() const
 {
 	return fType;
@@ -102,15 +97,14 @@ void Value::setValueString(std::string newValue)
 	fType = Type::eStringType;
 }
 
-void Value::setValueInteger(bool newValue)
+void Value::setValueInteger(int newValue)
 {
-	fValueBool = new bool(newValue);
+	fValueInteger = new int(newValue);
 	fType = Type::eIntType;
 }
 
 void Value::setNull()
 {
-	fNullValue = "null";
 	fType = Type::eNullType;
 }
 
@@ -118,13 +112,8 @@ void Value::setNull()
 
 Field::Field(const std::string& name, const Value& val)
 {
-	fFieldName = name;
+	fName = name;
 	value = val;
-}
-
-const std::string Field::getFieldName() const
-{
-	return fFieldName;
 }
 
 std::string Field::getValueAsString() const
@@ -144,18 +133,14 @@ std::string Field::getValueAsString() const
 	else if (value.getType() == Value::Type::eIntType) {
 		result = std::to_string(value.getValueInteger());
 	}
-	else if (value.getType() == Value::Type::eNullType) {
+	else 
+	{
 		result = "null";
 	}
 	return result;
 }
 
-void Field::setFieldName(const std::string newName)
-{
-	fFieldName = newName;
-}
-
-void Field::setValue(const Value newValue)
+void Field::setValue(const Value& newValue)
 {
 	if (newValue.getType() == Value::Type::eBoolType)
 	{
@@ -180,7 +165,7 @@ void Field::setValue(const Value newValue)
 
 void Field::print()
 {
-	std::cout<< "\"" << fFieldName << "\" : " << getValueAsString();
+	std::cout<< "\"" << fName << "\" : " << getValueAsString();
 }
 
 
@@ -190,16 +175,6 @@ void Field::print()
 Array::Array(const std::string& name)
 {
 	fArrayName = name;
-}
-
-const std::string Array::getArrayName() const
-{
-	return fArrayName;
-}
-
-void Array::setArrayName(std::string newArrayName)
-{
-	fArrayName = newArrayName;
 }
 
 void Array::print()
@@ -218,16 +193,6 @@ Object::Object(const std::string& name)
 	fObjectName = name;
 }
 
-const std::string Object::getObjectName() const
-{
-	return fObjectName;
-}
-
-void Object::setObjectName(std::string newObjectName)
-{
-	fObjectName = newObjectName;
-}
-
 void Object::print()
 {
 	std::cout<< "\"" << fObjectName << "\" : {" ;
@@ -239,7 +204,25 @@ void Object::print()
 
 
 
+JSONElement::~JSONElement()
+{
+	for (JSONElement* curr : elements)
+	{
+		delete curr;
+	}
+}
+
 void JSONElement::addElement(JSONElement* newElement)
 {
 	elements.push_back(newElement);
+}
+
+const std::string JSONElement::getName() const
+{
+	return fName;
+}
+
+void JSONElement::setName(const std::string newName)
+{
+	fName = newName;
 }

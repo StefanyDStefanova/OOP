@@ -28,7 +28,7 @@ private:
 
 public:
 	
-	Value() : fValueBool(nullptr), fValueString(nullptr), fValueInteger(nullptr), fNullValue(nullptr), fType(Type::eNullType) {}
+	Value() : fValueBool(nullptr), fValueString(nullptr), fValueInteger(nullptr), fNullValue("null"), fType(Type::eNullType) {}
 	Value(Value const& other);
 	Value& operator=(Value const& other);
 	~Value();
@@ -36,42 +36,47 @@ public:
 	const bool getValueBool() const;
 	const std::string getValueString() const;
 	const int getValueInteger() const;
-	const std::string getValueNull() const;
+
 	Type getType() const;
 
 	void setValueBool(bool newValue);
 	void setValueString(std::string newValue);
-	void setValueInteger(bool newValue);
+	void setValueInteger(int newValue);
 	void setNull();
 
 };
 
 class JSONElement
 {
-private:
+protected:
 	std::vector<JSONElement*> elements;
+	std::string fName;
+
 
 public:
-	virtual void print();
+	virtual ~JSONElement();
 
 	void addElement(JSONElement* newElement);
+
+	const std::string getName() const;
+	void setName(const std::string newName);
+
+
+	virtual void print();
 };
 
 
 class Field : public JSONElement
 {
 private:
-	std::string fFieldName;
 	Value value;
 
 public:
 	Field(const std::string& name, const Value& val);
 
-	const std::string getFieldName() const;
 	std::string getValueAsString() const;
 
-	void setFieldName(const std::string newName);
-	void setValue(const Value newValue);
+	void setValue(const Value& newValue);
 
 	void print();
 };
@@ -84,10 +89,6 @@ private:
 public:
 	Array(const std::string& name);
 	
-	const std::string getArrayName() const;
-
-	void setArrayName(std::string newArrayName);
-
 	void print();
 };
 
@@ -98,10 +99,6 @@ private:
 
 public:
 	Object(const std::string& name);
-
-	const std::string getObjectName() const;
-
-	void setObjectName(std::string newObjectName);
 
 	void print();
 };
