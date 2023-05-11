@@ -174,12 +174,12 @@ void Field::print()
 
 Array::Array(const std::string& name)
 {
-	fArrayName = name;
+	fName = name;
 }
 
 void Array::print()
 {
-	std::cout << "\"" << fArrayName << "\" : [ " ;
+	std::cout << "\"" << fName << "\" : [ " ;
 	// printim vytreshnostta na masiwa
 	std::cout << " ]";
 }
@@ -190,12 +190,12 @@ void Array::print()
 
 Object::Object(const std::string& name)
 {
-	fObjectName = name;
+	fName = name;
 }
 
 void Object::print()
 {
-	std::cout<< "\"" << fObjectName << "\" : {" ;
+	std::cout<< "\"" << fName << "\" : {" ;
 	//printim vytreshnistta na obekta
 	std::cout << " }";
 }
@@ -214,7 +214,7 @@ JSONElement::~JSONElement()
 
 void JSONElement::addElement(JSONElement* newElement)
 {
-	elements.push_back(newElement);
+	elements.push_back(newElement->clone());
 }
 
 const std::string JSONElement::getName() const
@@ -225,4 +225,40 @@ const std::string JSONElement::getName() const
 void JSONElement::setName(const std::string newName)
 {
 	fName = newName;
+}
+
+void JSONElement::setElem(const std::string& path, const std::string& newElem)
+{
+	int position = searchElemWithPath(path);
+	// have to go and change the field value
+	// now i have the position 
+	// how to to changed string
+
+	// creat in field->value method for chnged string value 
+}
+
+void JSONElement::createNewElem(const std::string& path, const std::string& newElem)
+{
+	auto postition = elements.begin() + searchElemWithPath(path);
+
+	elements.insert(postition, clone());
+
+	// i want to create field "name":null??
+}
+
+void JSONElement::deleteElem(const std::string& path)
+{
+	int position = searchElemWithPath(path);
+	//first delete elem
+	elements.erase(elements.begin() + position);
+}
+
+std::ostream& operator<<(std::ostream& out, const std::vector<JSONElement*>& data)
+{
+	for (JSONElement* jsonElem : data)
+	{
+		jsonElem->writeToStream(out);
+		out << std::endl;
+	}
+	return out;
 }
