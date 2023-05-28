@@ -192,6 +192,8 @@ void JSONParcer::performingOperations()
 	std::cout << "**************************************************************************************" << std::endl;
 	std::cout << std::endl;
 
+	this->printHelpFunc();
+
 	std::string operation;
 
 	while (1)
@@ -280,6 +282,7 @@ void JSONParcer::performingOperations()
 			try
 			{
 				fRootElement->setElem(pathVector, newValue);
+				std::cout << "The operation is successful." << std::endl;
 			}
 			catch (std::exception& e)
 			{
@@ -299,6 +302,7 @@ void JSONParcer::performingOperations()
 			try 
 			{
 				fRootElement->createNewElem(pathVector, newValue);
+				std::cout << "The operation is successful." << std::endl;
 			}
 			catch ( std::exception& e) 
 			{
@@ -316,6 +320,7 @@ void JSONParcer::performingOperations()
 			try
 			{
 				fRootElement->deleteElem(pathVector);
+				std::cout << "The operation is successful." << std::endl;
 			}
 			catch (std::exception& e)
 			{
@@ -336,6 +341,7 @@ void JSONParcer::performingOperations()
 			try
 			{
 				fRootElement->moveElem(pathFrom, pathTo);
+				std::cout << "The operation is successful." << std::endl;
 			}
 			catch (std::exception& e)
 			{

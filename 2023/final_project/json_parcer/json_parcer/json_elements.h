@@ -82,8 +82,9 @@ public:
 	void createNewElem(const std::vector<std::string>& path, const std::string& newElem);
 
 	void deleteElem(const std::vector<std::string>& path);
+	JSONElement* removeElem(const std::vector<std::string>& path);
 
-	void moveElem(const std::vector<std::string>& pathFrom, const std::vector<std::string>& pathTo);
+	void moveElem(std::vector<std::string>& pathFrom, std::vector<std::string>& pathTo);
 
 
 	virtual std::string getValueAsString() const = 0;

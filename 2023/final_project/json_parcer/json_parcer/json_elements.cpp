@@ -542,28 +542,46 @@ void JSONElement::createNewElem(const std::vector<std::string>& path, const std:
 
 }
 
-void JSONElement::deleteElem(const std::vector<std::string>& path)
+void JSONElement::deleteElem( const std::vector<std::string>& path)
 {
-	JSONElement* deleteThisElement = this->searchElemWithPath(path);
-	size_t index = 0;
-	for (JSONElement* child : fElements) 
+	std::vector<std::string> parentPath = path;
+	std::string nameElement = path.back();
+	parentPath.pop_back();
+	JSONElement* parentElement = this->searchElemWithPath(parentPath);
+	if (parentElement)
 	{
-		if (child == deleteThisElement) 
+		JSONElement* deleteThisElement = parentElement->removeElem(std::vector<std::string>{nameElement});
+
+		delete deleteThisElement;
+		deleteThisElement = nullptr;
+	}
+}
+
+JSONElement* JSONElement::removeElem(const std::vector<std::string>& path)
+{
+	JSONElement* removedElement = this->searchElemWithPath(path);
+	size_t index = 0;
+	for (JSONElement* child : fElements)
+	{
+		if (child == removedElement)
 		{
 			fElements.erase(fElements.begin() + index);
 		}
 		++index;
 	}
-	delete deleteThisElement;
+	return removedElement;
 }
 
 
-void JSONElement::moveElem(const std::vector<std::string>& pathFrom, const std::vector<std::string>& pathTo)
+void JSONElement::moveElem( std::vector<std::string>& pathFrom, std::vector<std::string>& pathTo)
 {
-	JSONElement* FromThisElement = this->searchElemWithPath(pathFrom);
+	std::string elementForMove = pathFrom.back();
+	pathFrom.pop_back();
 
-	JSONElement* ToThisElement = this->searchElemWithPath(pathTo);
-
+	JSONElement* parentFrom = this->searchElemWithPath(pathFrom);
+	JSONElement* parentTo = this->searchElemWithPath(pathTo);
+	JSONElement* elementToMove = parentFrom->removeElem(std::vector<std::string>{elementForMove});
+	parentTo->addElement( elementToMove );
 }
 
 
