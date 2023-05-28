@@ -68,7 +68,7 @@ std::vector<std::string> Utilities::splitString(const std::string str, const cha
 std::string Utilities::getValueBetweenQuotes(std::string line)
 {
 	std::string data = "";
-
+	line = Utilities::trim(line);
 	size_t startPos = line.find("\"");
 	if (startPos != std::string::npos)
 	{

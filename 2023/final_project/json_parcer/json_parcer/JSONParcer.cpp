@@ -145,7 +145,7 @@ void JSONParcer::readRecursiveNewElements(std::ifstream& in, JSONElement* curren
 
 			for (std::string field : fields) {
 
-				std::vector<std::string> singleValueField = Utilities::splitString(field, ": ");
+				std::vector<std::string> singleValueField = Utilities::splitString(field, ":");
 				
 				std::string name = Utilities::getValueBetweenQuotes(singleValueField[0]);
 				this->setValue(singleValueField[1], v);
@@ -234,13 +234,19 @@ void JSONParcer::performingOperations()
 
 		else if (operation == "close")
 		{
-			std::cout << "Do you want to close this file? - y/n" << std::endl;
+			if (fRootElement)
+			{
+				std::cout << "Do you want to close this file? - y/n" << std::endl;
 
-			char option;
-			std::cin >> option;
-			option == 'y' ? this->save() : delete fRootElement;
+				char option;
+				std::cin >> option;
+				option == 'y' ? this->save() :
+					delete fRootElement, fRootElement = nullptr;
 
-			std::cout << "The operation is successful." << std::endl;
+				std::cout << "The operation is successful." << std::endl;
+			}
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 
 		else if (operation == "help")
@@ -250,118 +256,156 @@ void JSONParcer::performingOperations()
 
 		else if (operation == "print")
 		{
-			fRootElement->print(std::cout, 0);
+			if (fRootElement)
+				fRootElement->print(std::cout, 0);
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 
 		else if (operation == "search")
 		{
-			std::string key;
-			std::cin >> key;
+			if (fRootElement)
+			{
+				std::string key;
+				std::cin >> key;
 
-			try
-			{
-				std::cout << "[\n";
-				fRootElement->searchElemWithKey(key);
-				std::cout << "]\n";
+				try
+				{
+					std::cout << "[\n";
+					fRootElement->searchElemWithKey(key);
+					std::cout << "]\n";
+				}
+				catch (std::exception& e)
+				{
+					std::cerr << e.what() << std::endl;
+				}
 			}
-			catch (std::exception& e)
-			{
-				std::cerr << e.what() << std::endl;
-			}
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 
 		else if (operation == "set")
 		{
-			std::string path;
-			std::cin >> path;
-			std::string newValue;
-			std::cin >> newValue;
-
-			std::vector<std::string> pathVector = Utilities::splitString(path, "/");
-
-			try
+			if (fRootElement)
 			{
-				fRootElement->setElem(pathVector, newValue);
-				std::cout << "The operation is successful." << std::endl;
+				std::string path;
+				std::cin >> path;
+				std::string newValue;
+				std::cin >> newValue;
+
+				std::vector<std::string> pathVector = Utilities::splitString(path, "/");
+
+				try
+				{
+					fRootElement->setElem(pathVector, newValue);
+					std::cout << "The operation is successful." << std::endl;
+				}
+				catch (std::exception& e)
+				{
+					std::cerr << e.what() << std::endl;
+				}
 			}
-			catch (std::exception& e)
-			{
-				std::cerr << e.what() << std::endl;
-			}
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 
 		else if (operation == "create")
 		{
-			std::string path;
-			std::cin >> path;
-			std::string newValue;
-			std::getline(std::cin, newValue, '\n');
-
-			std::vector<std::string> pathVector = Utilities::splitString(path, "/");
-
-			try 
+			if (fRootElement)
 			{
-				fRootElement->createNewElem(pathVector, newValue);
-				std::cout << "The operation is successful." << std::endl;
+				std::string path;
+				std::cin >> path;
+				std::string newValue;
+				std::getline(std::cin, newValue, '\n');
+
+				std::vector<std::string> pathVector = Utilities::splitString(path, "/");
+
+				try
+				{
+					fRootElement->createNewElem(pathVector, newValue);
+					std::cout << "The operation is successful." << std::endl;
+				}
+				catch (std::exception& e)
+				{
+					std::cerr << e.what() << std::endl;
+				}
 			}
-			catch ( std::exception& e) 
-			{
-				std::cerr << e.what() << std::endl;
-			}
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 
 		else if (operation == "delete")
 		{
-			std::string path;
-			std::cin >> path;
-
-			std::vector<std::string> pathVector = Utilities::splitString(path, "/");
-
-			try
+			if (fRootElement)
 			{
-				fRootElement->deleteElem(pathVector);
-				std::cout << "The operation is successful." << std::endl;
+				std::string path;
+				std::cin >> path;
+
+				std::vector<std::string> pathVector = Utilities::splitString(path, "/");
+
+				try
+				{
+					fRootElement->deleteElem(pathVector);
+					std::cout << "The operation is successful." << std::endl;
+				}
+				catch (std::exception& e)
+				{
+					std::cerr << e.what() << std::endl;
+				}
 			}
-			catch (std::exception& e)
-			{
-				std::cerr << e.what() << std::endl;
-			}
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 
 		else if (operation == "move")
 		{
-			std::string from;
-			std::cin >> from;
-			std::string to;
-			std::cin >> to;
-
-			std::vector<std::string> pathFrom = Utilities::splitString(from, "/");
-			std::vector<std::string> pathTo = Utilities::splitString(to, "/");
-
-			try
+			if (fRootElement)
 			{
-				fRootElement->moveElem(pathFrom, pathTo);
-				std::cout << "The operation is successful." << std::endl;
+				std::string from;
+				std::cin >> from;
+				std::string to;
+				std::cin >> to;
+
+				std::vector<std::string> pathFrom = Utilities::splitString(from, "/");
+				std::vector<std::string> pathTo = Utilities::splitString(to, "/");
+
+				try
+				{
+					fRootElement->moveElem(pathFrom, pathTo);
+					std::cout << "The operation is successful." << std::endl;
+				}
+				catch (std::exception& e)
+				{
+					std::cerr << e.what() << std::endl;
+				}
 			}
-			catch (std::exception& e)
-			{
-				std::cerr << e.what() << std::endl;
-			}
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 
 		else if (operation == "save")
 		{
-			std::string path;
-			std::cin >> path;
-			this->save();
+			if (fRootElement)
+			{
+				std::string path;
+				std::cin >> path;
+				this->save();
+			}
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 
 		else if (operation == "saveas")
 		{
-			std::string path;
-			std::cin >> path;
+			if (fRootElement)
+			{
+				std::string path;
+				std::cin >> path;
 
-			this->saveAs(path);
+				this->saveAs(path);
+			}
+			else
+				std::cout << "File is not open." << std::endl;
 		}
 		else if (operation == "exit") 
 		{
