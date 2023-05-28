@@ -4,6 +4,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <list>
+
+#include "Utilities.h"
 
 class Value
 {
@@ -13,12 +16,14 @@ public:
 		eBoolType,
 		eStringType,
 		eIntType,
+		eDoubleType,
 	};
 
 private:
 	bool* fValueBool;
 	std::string* fValueString;
 	int* fValueInteger;
+	double* fValueDouble;
 	std::string fNullValue;
 
 	Type fType;
@@ -28,7 +33,7 @@ private:
 
 public:
 	
-	Value() : fValueBool(nullptr), fValueString(nullptr), fValueInteger(nullptr), fNullValue("null"), fType(Type::eNullType) {}
+	Value() : fValueBool(nullptr), fValueString(nullptr), fValueInteger(nullptr), fValueDouble(nullptr), fNullValue("null"), fType(Type::eNullType) {}
 	Value(Value const& other);
 	Value& operator=(Value const& other);
 	~Value();
@@ -36,101 +41,94 @@ public:
 	const bool getValueBool() const;
 	const std::string getValueString() const;
 	const int getValueInteger() const;
+	const double getValueDouble() const;
 
 	Type getType() const;
 
 	void setValueBool(bool newValue);
 	void setValueString(std::string newValue);
 	void setValueInteger(int newValue);
+	void setValueDouble(double newValue);
 	void setNull();
 
 };
 
+/*---------------------------------------------------------------------------------------------------*/
+
 class JSONElement
 {
 protected:
-	std::vector<JSONElement*> elements;
+	std::vector<JSONElement*> fElements;
 	std::string fName;
+
+private: 
+	void createJSONHelper(std::vector<std::string>& newElem, JSONElement* currentElement);
 
 
 public:
 	virtual ~JSONElement();
 
-	void addElement(JSONElement* newElement);
-
 	const std::string getName() const;
 	void setName(const std::string newName);
+
+	void addElement(JSONElement* newElement);
+
 	void searchElemWithKey(const std::string& key);
 
-	int searchElemWithPath(const std::string& path); // return postition
-	void setElem(const std::string& path, const std::string& newElem);
-	void createNewElem(const std::string& path, const std::string& newElem);
+	JSONElement* searchElemWithPath(const std::vector<std::string>& path);
+	JSONElement* searchElemWithPathHelper(const std::vector<std::string>& path, size_t index);
 
-	void deleteElem(const std::string& path);
+	void setElem( std::vector<std::string>& path, const std::string& newElem);
+	void createNewElem(const std::vector<std::string>& path, const std::string& newElem);
 
-	void moveElem(const std::string& pathFrom, const std::string& pathTo);
+	void deleteElem(const std::vector<std::string>& path);
 
-	void save(const std::string& path);
-	void saveAs(const std::string& fileNme, const std::string& path);
+	void moveElem(const std::vector<std::string>& pathFrom, const std::vector<std::string>& pathTo);
 
-	virtual JSONElement* clone() = 0;
 
-	virtual void writeToStream(std::ostream&) = 0;
-	virtual void loadFromStream(std::istream&) = 0;
+	virtual std::string getValueAsString() const = 0;
 
-	virtual void print() = 0;
+	virtual void print( std::ostream& oStream, size_t numberOfTabs ) = 0;
 };
 
-std::istream& operator>> (std::istream& in, std::vector<JSONElement*>& data);
-std::ostream& operator<< (std::ostream& out, const std::vector<JSONElement*>& data);
-
-
+/*---------------------------------------------------------------------------------------------------*/
 
 class Field : public JSONElement
 {
 private:
-	Value value;
+	Value fValue;
 
 public:
 	Field(const std::string& name, const Value& val);
 
-	std::string getValueAsString() const;
+	virtual std::string getValueAsString() const override;
 	void setValue(const Value& newValue);
 
-	JSONElement* clone();
-
-	void writeToStream(std::ostream& out);
-	void loadFromStream(std::istream& in);
-
-
-	void print();
+	virtual void print(std::ostream& oStream, size_t numberOfTabs) override;
 };
+
+/*---------------------------------------------------------------------------------------------------*/
 
 class Array : public JSONElement
 {
 public:
 	Array(const std::string& name);
 
-	JSONElement* clone();
+	virtual std::string getValueAsString() const override;
 
-	void writeToStream(std::ostream& out);
-	void loadFromStream(std::istream& in);
-
-	
-	void print();
+	virtual void print(std::ostream& oStream, size_t numberOfTabs) override;
 };
+
+/*---------------------------------------------------------------------------------------------------*/
 
 class Object : public JSONElement
 {
 public:
 	Object(const std::string& name);
 
-	JSONElement* clone();
+	virtual std::string getValueAsString() const override;
 
-	void writeToStream(std::ostream& out);
-	void loadFromStream(std::istream& in);
-
-	void print();
+	virtual void print(std::ostream& oStream, size_t numberOfTabs) override;
 };
 
 #endif // !__JSON_ELEMENTS

@@ -1,30 +1,11 @@
 ﻿#include "JSONParcer.h"
 
-
-std::string getName(std::string line)
-{
-	std::string data = "";
-
-	size_t startPos = line.find("\"");
-	if (startPos != std::string::npos)
-	{
-		size_t i = startPos + 1;
-		while (i < line.length() && line[i] != '\"')
-		{
-			data += line[i];
-			i++;
-		}
-	}
-
-	return data;
-}
-
 void JSONParcer::readFromFile(const std::string& fileName)
 {
 	std::ifstream in(fileName);
 	if (!in.good())
 	{
-		throw std::runtime_error("Failed to open file: " + fileName);
+		throw std::runtime_error("Failed to open file! - " + fileName);
 	}
 
 	std::string line;
@@ -32,83 +13,61 @@ void JSONParcer::readFromFile(const std::string& fileName)
 	std::getline(in, line);
 	if (line != "{")
 	{
-		throw std::invalid_argument("File is wrong!" + fileName);
+		in.close();
+		throw std::invalid_argument("File is wrong! - " + fileName);
 	}
+
 	fCurrentOpenFileName = fileName;
-	fRootElement = new Object("__rootName");
-	this->readRecursiveNewElements(in, fRootElement);
+	fRootElement = new Object("");
+	try 
+	{
+		this->readRecursiveNewElements(in, fRootElement);
+	}
+	catch (std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
+
 	in.close();
 
 }
 
-bool isInteger(std::string data)
-{
-	for (int i = 0; i < data.length(); i++)
-	{
-		if (data[i] < '0' || data[i] > '9')
-			return false;
-	}
-	return true;
-}
 
-bool isDouble(std::string data)
-{
-	size_t position = data.find(",");
-
-	for (size_t i = 0; i < position; i++)
-	{
-		if (data[i] < '0' || data[i] > '9')
-			return false;
-	}
-
-	for (size_t i = position + 1; i < data.length(); i++)
-	{
-		if (data[i] < '0' || data[i] > '9')
-			return false;
-	}
-
-	return true;
-}
-
-const std::string WHITESPACE = " \n\r\t\f\v";
-
-std::string ltrim(const std::string& s)
-{
-	size_t start = s.find_first_not_of(WHITESPACE);
-	return (start == std::string::npos) ? "" : s.substr(start);
-}
-
-std::string rtrim(const std::string& s)
-{
-	size_t end = s.find_last_not_of(WHITESPACE);
-	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
-}
-
-std::string trim(const std::string& s) {
-	return rtrim(ltrim(s));
-}
-
-void setValue(std::string data, Value v)
+void JSONParcer::setValue(std::string data, Value& v)
 {
 	if (data == "true" || data == "false")
 	{
 		v.setValueBool(data == "true");
 	}
-	else if (data[0] == '\"' && data[data.length() - 1] == '\"')
-	{
-		v.setValueString(data);
-	}
-	else if (isInteger(data))
+	else if (Utilities::isInteger(data))
 	{
 		int number = std::stoi(data);
 		v.setValueInteger(number);
 	}
-	else if (isDouble(data))
+	else if (Utilities::isDouble(data))
 	{
 		double number = std::stod(data);
 		v.setValueDouble(number);
 	}
+	else
+	{
+		v.setValueString(data);
+	}
+}
 
+void JSONParcer::addMultipleFields(std::string line, JSONElement* newElement, JSONElement* currentElement)
+{
+	std::vector<std::string> fields = Utilities::splitString(line, ",");
+
+	Value v;
+
+	for (std::string field : fields) {
+		std::string value = Utilities::getValueBetweenQuotes(field);
+
+		this->setValue(value, v);
+		newElement = new Field("", v);
+		currentElement->addElement(newElement);
+	}
 }
 
 void JSONParcer::readRecursiveNewElements(std::ifstream& in, JSONElement* currentElement)
@@ -118,7 +77,7 @@ void JSONParcer::readRecursiveNewElements(std::ifstream& in, JSONElement* curren
 
 	while (std::getline(in, line))
 	{
-		line = trim(line);
+		line = Utilities::trim(line);
 		if (line.empty())
 		{
 			continue;
@@ -129,9 +88,9 @@ void JSONParcer::readRecursiveNewElements(std::ifstream& in, JSONElement* curren
 			return;
 		}
 
-		JSONElement* newElement;
+		JSONElement* newElement = nullptr;
 
-		if (line == "null,")
+		if (line == "null," || line == "null")
 		{
 			Value v;
 
@@ -142,19 +101,21 @@ void JSONParcer::readRecursiveNewElements(std::ifstream& in, JSONElement* curren
 			continue;
 		}
 
-		if (line.find("\"") && line.find(":") == std::string::npos)
+		if (line.find(":") == std::string::npos &&
+			line.find("{") == std::string::npos &&
+			line.find("[") == std::string::npos)
 		{
 			//tuk prowerqwam dali ima fildowe koito nqmat int no imat value;
+			this->addMultipleFields(line, newElement, currentElement);
 
-			std::string data = getName(line);
-			Value v;
-
-			setValue(data, v);
 			continue;
 		}
 
-		std::string nameElement = getName(line);
+		// tuk izwlichame imeto na poleto nezawisimo ot wida mu
+		std::string nameElement = Utilities::getValueBetweenQuotes(line);
 
+
+		// zapochwame da prowerqwame strojnostta sled : kato pyrwo namirame prawilnata oziciq
 		size_t position = line.find(":") + 1;
 		char nextChar = line[position];
 
@@ -177,23 +138,24 @@ void JSONParcer::readRecursiveNewElements(std::ifstream& in, JSONElement* curren
 		}
 		else
 		{
-			std::vector<std::string> fields = this->splitString(line, ',');
+			
+			std::vector<std::string> fields = Utilities::splitString(line, ",");
 
-			std::string data = line.substr(position, line.length() - position);
 			Value v;
 
-			// tuk trqbwa da wleze w wyw fora ako ima takowa splitwane koeto ne e winagi no ne znam kakwo da e usl
-			//ili to dori da si e samo edin red shte zapishe neshto w tozi red?
-
 			for (std::string field : fields) {
-				std::string nameField = getName(field);
 
-				setValue(data, v);
+				std::vector<std::string> singleValueField = Utilities::splitString(field, ": ");
+				
+				std::string name = Utilities::getValueBetweenQuotes(singleValueField[0]);
+				this->setValue(singleValueField[1], v);
+				
+				newElement = new Field(name, v);
+
+				currentElement->addElement(newElement);
 			}
-						
-			//setValue(data, v);
+			continue;
 
-			newElement = new Field(nameElement, v);
 		}
 
 		currentElement->addElement(newElement);
@@ -207,14 +169,18 @@ void JSONParcer::writeToFile(const std::string& fileName)
 	std::ofstream out(fileName);
 	if (!out.good())
 	{
-		throw std::runtime_error("Failed to open file: " + fileName);
+		throw std::runtime_error("Failed to open file! - " + fileName);
 	}
 
 	out << "{\n";
 
-	fRootElement->print(out);
+	fRootElement->print(out, 0);
 
 	out << "}";
+
+	out.close();
+	std::cout << "The operation is successful. Write in " + fileName << std::endl;
+
 }
 
 
@@ -238,7 +204,10 @@ void JSONParcer::performingOperations()
 
 		if (operation == "validate")
 		{
-			fRootElement->validate();
+			!fCurrentOpenFileName.empty()	? std::cout << "The file is valid."
+											: std::cout << "The file is not valid.";
+
+			std::cout << std::endl;
 		}
 		
 		else if (operation == "open")
@@ -246,17 +215,30 @@ void JSONParcer::performingOperations()
 			std::string nameFile;
 			std::cin >> nameFile;
 
-			this->readFromFile(nameFile);
+			fCurrentOpenFileName = nameFile;
+
+			try
+			{
+				this->readFromFile(nameFile);
+
+				std::cout << "The operation is successful." << std::endl;
+			}
+			catch (const std::exception& e)
+			{
+				std::cout << "Error: " << e.what() << std::endl;
+				fCurrentOpenFileName = "";
+			}
 		}
 
 		else if (operation == "close")
 		{
-			std::cout << "Do you want to close this file? - y/n";
+			std::cout << "Do you want to close this file? - y/n" << std::endl;
 
 			char option;
 			std::cin >> option;
-			(option == 'y') ? this->save() : delete fRootElement;
+			option == 'y' ? this->save() : delete fRootElement;
 
+			std::cout << "The operation is successful." << std::endl;
 		}
 
 		else if (operation == "help")
@@ -266,7 +248,7 @@ void JSONParcer::performingOperations()
 
 		else if (operation == "print")
 		{
-			fRootElement->print(std::cout);
+			fRootElement->print(std::cout, 0);
 		}
 
 		else if (operation == "search")
@@ -274,7 +256,16 @@ void JSONParcer::performingOperations()
 			std::string key;
 			std::cin >> key;
 
-			fRootElement->searchElemWithKey(key, fRootElement);
+			try
+			{
+				std::cout << "[\n";
+				fRootElement->searchElemWithKey(key);
+				std::cout << "]\n";
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << e.what() << std::endl;
+			}
 		}
 
 		else if (operation == "set")
@@ -284,9 +275,16 @@ void JSONParcer::performingOperations()
 			std::string newValue;
 			std::cin >> newValue;
 
-			std::vector<std::string> pathVector = this->splitString(path, '/');
+			std::vector<std::string> pathVector = Utilities::splitString(path, "/");
 
-			fRootElement->setElem(pathVector, newValue);
+			try
+			{
+				fRootElement->setElem(pathVector, newValue);
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << e.what() << std::endl;
+			}
 		}
 
 		else if (operation == "create")
@@ -294,12 +292,18 @@ void JSONParcer::performingOperations()
 			std::string path;
 			std::cin >> path;
 			std::string newValue;
-			std::cin >> newValue;
+			std::getline(std::cin, newValue, '\n');
 
-			std::vector<std::string> pathVector = this->splitString(path, '/');
+			std::vector<std::string> pathVector = Utilities::splitString(path, "/");
 
-
-			fRootElement->createNewElem(pathVector, newValue);
+			try 
+			{
+				fRootElement->createNewElem(pathVector, newValue);
+			}
+			catch ( std::exception& e) 
+			{
+				std::cerr << e.what() << std::endl;
+			}
 		}
 
 		else if (operation == "delete")
@@ -307,9 +311,16 @@ void JSONParcer::performingOperations()
 			std::string path;
 			std::cin >> path;
 
-			std::vector<std::string> pathVector = this->splitString(path, '/');
+			std::vector<std::string> pathVector = Utilities::splitString(path, "/");
 
-			fRootElement->deleteElem(pathVector);
+			try
+			{
+				fRootElement->deleteElem(pathVector);
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << e.what() << std::endl;
+			}
 		}
 
 		else if (operation == "move")
@@ -319,10 +330,17 @@ void JSONParcer::performingOperations()
 			std::string to;
 			std::cin >> to;
 
-			std::vector<std::string> pathFrom = this->splitString(from, '/');
-			std::vector<std::string> pathTo = this->splitString(to, '/');
+			std::vector<std::string> pathFrom = Utilities::splitString(from, "/");
+			std::vector<std::string> pathTo = Utilities::splitString(to, "/");
 
-			fRootElement->moveElem(pathFrom, pathTo);
+			try
+			{
+				fRootElement->moveElem(pathFrom, pathTo);
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << e.what() << std::endl;
+			}
 		}
 
 		else if (operation == "save")
@@ -334,8 +352,6 @@ void JSONParcer::performingOperations()
 
 		else if (operation == "saveas")
 		{
-			std::string file;
-			std::cin >> file;
 			std::string path;
 			std::cin >> path;
 
@@ -348,35 +364,14 @@ void JSONParcer::performingOperations()
 	}
 }
 
-
-std::vector<std::string> JSONParcer::splitString(const std::string& str, char delimiter)
-{
-	std::vector<std::string> tokensVector;
-	std::string token;
-	std::size_t startPos = 0;
-	std::size_t endPos = str.find(delimiter);
-
-	while (endPos != std::string::npos)
-	{
-		token = str.substr(startPos, endPos - startPos);
-		tokensVector.push_back(token);
-
-		startPos = endPos + 1;
-		endPos = str.find(delimiter, startPos);
-	}
-
-	token = str.substr(startPos);
-	tokensVector.push_back(token);
-
-	return tokensVector;
-}
-
 void JSONParcer::save()
 {
+	writeToFile(fCurrentOpenFileName);
 }
 
 void JSONParcer::saveAs(const std::string& path)
 {
+	writeToFile(path);
 }
 
 void JSONParcer::printHelpFunc()
