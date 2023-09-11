@@ -1,0 +1,28 @@
+{
+{
+   "menu" : {
+       "id" :  "file",
+       "value" :  "File",
+       "popup" : {
+           "menuitem" : [ 
+              {
+                   "value" :  "New",
+                   "onclick" :  "CreateNewDoc()",
+              }
+              {
+                   "value" :  "Open",
+                   "onclick" :  "OpenDoc()",
+              }
+              {
+                   "value" :  "Save",
+                   "onclick" :  "SaveDoc()",
+              }
+         ],
+           "stefany" :  "cool",
+           "model" : HP,
+      }
+       "glovo" :  5,
+       "hrana" :  "ajde",
+  }
+ }
+}

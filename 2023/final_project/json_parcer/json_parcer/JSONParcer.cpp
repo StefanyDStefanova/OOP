@@ -105,7 +105,7 @@ void JSONParcer::readRecursiveNewElements(std::ifstream& in, JSONElement* curren
 			line.find("{") == std::string::npos &&
 			line.find("[") == std::string::npos)
 		{
-			//tuk prowerqwam dali ima fildowe koito nqmat int no imat value;
+			//tuk prowerqwam dali ima fildowe koito nqmat ime no imat value;
 			this->addMultipleFields(line, newElement, currentElement);
 
 			continue;

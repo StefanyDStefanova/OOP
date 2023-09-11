@@ -1,4 +1,5 @@
-﻿  json_elements.cpp
-  json_parcer.cpp
+﻿  JSONParcer.cpp
+  json_elements.cpp
+  main.cpp
   Generating Code...
-  json_parcer.vcxproj -> C:\Users\sds_0\source\repos\json_parcer\x64\Debug\json_parser.exe
+  json_parcer.vcxproj -> C:\Users\sds_0\source\repos\OOP\2023\final_project\json_parcer\x64\Debug\json_parser.exe
